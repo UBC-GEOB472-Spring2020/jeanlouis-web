@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title></title>
+<meta name="viewport" content="initial-scale=5,maximum-scale=18,user-scalable=no" />
+<script src='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css' rel='stylesheet' />
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  margin: 10px;
+  font-size: 1.2em;
+}
+
+h3 {
+  margin: 0px;
+  font-size: 1em;
+}
+
+p {
+  font-size: 0.85em;
+  margin: 10px;
+  text-align: left;
+}
+
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  margin-right: 20px;
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  overflow: auto;
+  border-radius: 3px;
+}
+
+#features {
+  top: 0;
+  height: 80px;
+  margin-top: 20px;
+  width: 400px;
+}
+
+#legend {
+  padding: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  line-height: 18px;
+  height: 120px;
+  margin-bottom: 40px;
+  width: 120px;
+}
+
+.legend-key {
+  display: inline-block;
+  border-radius: 20%;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+
+}
+
+
+</style>
+
+<div id='map'></div>
+<div class='map-overlay' id='features'><h2>2018 Canadian Wildfires</h2>
+<div id='pd'><p>Click on Individual Wildfires for More Information</p></div></div>
+<div class='map-overlay' id='legend'><h3>Fire Causes</h3></div>
+
+</head>
+<body>
+<style>
+.mapboxgl-popup {
+  max-width: 400px;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  }
+  
+</style>
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoiamVhbmxvdWlzcyIsImEiOiJjazZwbHQxbG0xbzB2M2RrZzFpanVrcGFoIn0.xj-02VRwn5MoAtfihlQtzw';
+var map = new mapboxgl.Map({
+container: 'map', // container id
+style: 'mapbox://styles/jeanlouiss/ck6r2ghbo1rrc1inwatxhmc76', //hosted style id
+center: [-122, 55], // starting position
+zoom: 5 // starting zoom
+})
+map.addControl(new mapboxgl.NavigationControl());
+
+
+map.on('load', function() {
+  
+
+})
+
+var layers = ['0: Undefined', '1: Other', '2: Lightning', '3: Industry', '4: Human'];
+var colors = ['#5f4690', '#73b0d4', '#efc934', '#0f8554', '#f218e7'];
+for (i = 0; i < layers.length; i++) {
+  var layer = layers[i];
+  var color = colors[i];
+  var item = document.createElement('div');
+  var key = document.createElement('span');
+  key.className = 'legend-key';
+  key.style.backgroundColor = color;
+
+  var value = document.createElement('span');
+  value.innerHTML = layer;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+
+};
+
+map.on('click', 'fires', function(e) {
+new mapboxgl.Popup()
+.setLngLat(e.lngLat)
+.setHTML(e.features[0].properties.POLY_HA + 
+'</strong> Hectares</em></p>' +
+'<br/>' + '</strong>Start Date: </em>'+ e.features[0].properties.SDATE + '<br/>' 
++ '</strong> End Date: </em>' + e.features[0].properties.EDATE+ '<br/>' 
++ '</strong> Cause of Fire: </em>' + e.features[0].properties.FIRECAUS
+ )
+.addTo(map);
+
+});
+
+
+map.on('mouseenter','fires',
+function(){
+  map.getCanvas().style.cursor= 'pointer';
+});
+
+map.on('mouseleave', 'fires',
+function(){
+    map.getCanvas().style.cursor = '';
+    });
+
+
+/*
+    map.on('mousemove', function(e) {
+  var states = map.queryRenderedFeatures(e.point, {
+    layers: ['fires']
+  });
+
+  if (states.length > 0) {
+    document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.name + '</strong></h3><p><strong><em>' + states[0].properties.density + '</strong> people per square mile</em></p>';
+  } else {
+    document.getElementById('pd').innerHTML = '<p>Hover over a state!</p>';
+  }
+});*/
+</script>
+ 
+</body>
+</html>
