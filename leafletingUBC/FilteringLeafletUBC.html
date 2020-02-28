@@ -1,0 +1,134 @@
+
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <title>Leaflet Exercise</title>
+      <meta charset="utf-8" />
+        
+    
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    
+  </head>
+  <body>
+      
+    <div id="mapid" style="width: 600px; height: 400px;"></div>
+    <div id="controls" style="margin: 15px;">
+        <button id="showAllGreenspaceButton"> Show All Greenspace</button>
+        <span style = "display:inline-block; width: 30px"></span>
+        <input type="text" id="highlightGreenspaceTextEntry"
+                placeholder="Greenspace Type (eg. Field)">
+                <button id="highlightGreenspaceButton">Highlight</button>
+            </div>
+    
+     <script>
+            var map = L.map('mapid', {center: [49.265637, -123.256113],zoom: 15});
+            var OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+	        maxZoom: 20,
+            attribution: '&copy; Openstreetmap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            var greenspaceMarkerOptions = {
+        radius: 4,
+    	fillColor: "#009900",
+    	color: "#060",
+    	weight: 3,
+    	opacity: 0.2,
+    	fillOpacity: 0.8
+		};
+
+            var greenspaceMarkerHighlightedOptions = {
+                radius: 4,
+                fillColor: "#FF9900",
+                color: "#000",
+                weight: 1,
+                opacity: 0.3,
+                fillOpacity: 0.5
+            };
+
+        function onEachGreenspace(feature, layer) {
+        if (feature.properties && feature.properties.PL_TYPE) {
+            layer.bindTooltip(feature.properties.PL_TYPE);
+            }   
+        }
+
+        function greenspacePointToLayer (feature, latlng) {
+
+                if (typeToHighlight === ""){
+                    greenspaceMarkerOptionsToUse = greenspaceMarkerOptions;
+                } else {
+                    greenspaceMarkerOptionsToUse = greenspaceMarkerHighlightedOptions;
+                }
+
+                return L.circleMarker (
+                latlng, 
+                greenspaceMarkerOptionsToUse
+
+            );
+        }
+
+        function greenspaceToFilter (feature, layer){
+                if(typeToHighlight === ""){
+                    return true;
+                    // draws everything
+                }
+                else if (feature.properties && feature.properties.PL_TYPE){
+                    //
+
+                    return feature.properties.PL_TYPE.toLowerCase().includes(typeToHighlight.toLowerCase());
+                    //notcasesensitive
+                } else {
+                    return false;
+            }
+        }
+
+            var lastLayerAdded = {};
+
+            function addGreenspace () {
+                if(map.hasLayer(lastLayerAdded)){
+                    map.removeLayer(lastLayerAdded)
+                }
+                lastLayerAdded = L.geoJSON(greenspaceGeoJSONdata, {
+                                    pointToLayer: greenspacePointToLayer,
+                                    onEachFeature: onEachGreenspace,
+                                    filter: greenspaceToFilter
+                }
+                );
+                lastLayerAdded.addTo(map);
+                };
+
+                var typeToHighlight = "";
+                
+            function highlightGreenspace(){
+                typeToHighlight = document 
+                                    .getElementById("highlightGreenspaceTextEntry")
+                                    .value;
+                addGreenspace();
+                typeToHighlight="";
+            }
+
+            var greenspaceGeoJSONdata;
+
+    $.getJSON("https://raw.githubusercontent.com/UBCGeodata/ubcv-locations/master/geojson/ubcv_outdoor_places.geojson",
+    function(data) {
+      					// Store data for later:
+			      		greenspaceGeoJSONdata = data;
+      					// Create event listener for ShowAllTrees Button:
+								document
+                  .getElementById("showAllGreenspaceButton")
+                  .addEventListener("click", addGreenspace);
+      					// Create event listener for the highlightTrees Button:
+      					document
+                  .getElementById("highlightGreenspaceButton")
+                  .addEventListener("click", highlightGreenspace);
+      
+  			}
+    );
+
+      </script>
+
+
+  </body>
+  </html>
