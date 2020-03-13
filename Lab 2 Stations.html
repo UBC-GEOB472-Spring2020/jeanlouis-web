@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title></title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css' rel='stylesheet' />
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+<script>
+    var bbox = turf.bbox(features);
+</script>
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, Sans-serif;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+h1 {
+  font-size: 20px;
+  line-height: 30px;
+}
+
+h2 {
+  font-size: 14px;
+  line-height: 16px;
+  margin-bottom: 1px;
+}
+
+h4 {
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: 5px;
+}
+
+a {
+  text-decoration: none;
+  color: #2dc4b2;
+}
+
+#console {
+  position: absolute;
+  width: 240px;
+  margin: 10px;
+  padding: 10px 20px;
+  background-color: white;
+}
+
+h3 {
+  margin: 0px;
+  font-size: 1em;
+}
+
+p {
+  font-size: 0.85em;
+  margin: 10px;
+  text-align: left;
+}
+
+
+
+#features {
+  top: 0;
+  height: 80px;
+  margin-top: 20px;
+  width: 400px;
+}
+
+</style>
+
+
+
+<style>
+/* Customize the label (the container) */
+.container {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 20px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide the browser's default checkbox */
+.container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkbox */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background-color: #eee;
+}
+
+/* On mouse-over, add a grey background color */
+.container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.container input:checked ~ .checkmark {
+  background-color: #2196F3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+.container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Style the checkmark/indicator */
+.container .checkmark:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+</style>
+
+
+<div id='map'></div>
+<div id='console'>
+  <h1>2018 Atlantic Invasive Species Survey</h1>
+  <p>Data: <a href='https://open.canada.ca/data/en/dataset/503a957e-7d6b-11e9-aef3-f48c505b2a29'>invasive species monitoring stations</a> in Atlantic Canada, 2018. 
+  <br> Click each station for more information!</p>
+  <br/>
+
+  <div class='session'>
+    <h2>Select species below to show which stations found them </h2><br>
+    <div class='row' id='filters'>
+      <input id='bVioId' type='radio' name='toggle' value='bVio'>
+      <label for='bVioId'>B. violaceus</label><br/>
+      <input id='cIntId' type='radio' name='toggle' value='cInt'>
+      <label for='cIntId'>C. intestinalis</label><br/>
+      <input id='bSchId' type='radio' name='toggle' value='bSch'>
+      <label for='bShId'>B. schlosseri</label><br/>
+      <input id='cMutId' type='radio' name='toggle' value='cMut'>
+      <label for='cMutId'>C. mutica</label><br/>
+      <input id='mMemId' type='radio' name='toggle' value='mMem'>
+      <label for='mMemId'>M. memberanacea</label><br/>
+      <input id='sClaId' type='radio' name='toggle' value='sCla'>
+      <label for='sClaId'>S. clava</label><br/>
+      <input id='clear' type='radio' name='toggle' value='clear' checked='checked'>
+      <label for='clear'>Clear</label><br/>
+    </div>
+  </div>
+
+</head>
+<body>
+<style>
+.mapboxgl-popup {
+  max-width: 400px;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  }
+  
+</style>
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoiamVhbmxvdWlzcyIsImEiOiJjazZwbHQxbG0xbzB2M2RrZzFpanVrcGFoIn0.xj-02VRwn5MoAtfihlQtzw';
+var map = new mapboxgl.Map({
+container: 'map', // container id
+style: 'mapbox://styles/jeanlouiss/ck7nzwmrg0lxg1jpauthsfitl', //hosted style id
+center: [-63, 46], // starting position
+zoom: 7 // starting zoom
+})
+map.addControl(new mapboxgl.NavigationControl());
+
+
+map.on('load', function() {
+    map.addSource('stationsData', {
+  'type': 'geojson',
+  'data': 'https://raw.githubusercontent.com/dfo-gulf-science/fgp-datasets/master/grais/station_summary_report_eng.geojson'
+});
+
+
+
+map.addLayer({
+    'id': 'stations',
+    'type':'symbol',
+    'source':'stationsData',
+    'layout': {
+        'icon-image': ['concat','embassy','-15'],
+        'text-field': ['get', 'station_name'],
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+        'text-offset': [0, 0.6],
+        'text-anchor': 'top',
+    },
+
+});
+document.getElementById('filters').addEventListener('change', function(e) {
+  var species = e.target.value;
+  // update the map filter
+  if (species === 'bVio') {
+    filterSpecies = ["==", "B_violaceus_detected", "True"];
+  } else if (species === 'cInt') {
+    filterSpecies = ["==", "C_intestinalis_detected", "True"];
+  } else if (species === 'sCla') {
+    filterSpecies = ["==", "S_clava_detected", "True"];
+  } else if (species === 'bSch') {
+    filterSpecies = ["==", "B_schlosseri_detected", "True"];
+  } else if (species === 'cMut') {
+    filterSpecies = ["==", "C_mutica_detected", "True"];
+  } else if (species === 'mMem') {
+    filterSpecies = ["==", "M_membranacea_detected", "True"];
+  } else if (species === 'clear') {
+    filterSpecies = ['all'];
+  } else {
+    console.log('error');
+  }
+  map.setFilter('stations', ['all', filterSpecies]);
+});
+
+/*
+var layers = ['0: Undefined', '1: Other', '2: Lightning', '3: Industry', '4: Human'];
+var colors = ['#5f4690', '#73b0d4', '#efc934', '#0f8554', '#f218e7'];
+for (i = 0; i < layers.length; i++) {
+  var layer = layers[i];
+  var color = colors[i];
+  var item = document.createElement('div');
+  var key = document.createElement('span');
+  key.className = 'legend-key';
+  key.style.backgroundColor = color;
+
+  var value = document.createElement('span');
+  value.innerHTML = layer;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+
+};*/
+})
+
+
+
+map.on('click','stations', function(e) {
+    map.flyTo({ center: e.features[0].geometry.coordinates })
+    var coordinates = e.features[0].geometry.coordinates.slice();
+    var speciesFound = e.features[0].properties.list_of_other_species_observed;
+    var name = e.features[0].properties.station_name;
+    var code = e.features[0].properties.station_code;
+    var prov = e.features[0].properties.station_province;
+    var oth = e.features[0].properties.list_of_other_species_observed;
+    var bVio = e.features[0].properties.B_violaceus_detected;
+    var cInt = e.features[0].properties.C_intestinalis_detected;
+    var sCla = e.features[0].properties.S_clava_detected;
+    var bSch = e.features[0].properties.B_schlosseri_detected;
+    var cMut = e.features[0].properties.C_mutica_detected;
+    var mMem = e.features[0].properties.M_membranacea_detected;
+
+
+while (Math.abs(e.lngLat.lng - coordinates[0]) > 180){
+    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360
+    : -360;
+}
+    
+
+    new mapboxgl.Popup({offset:15})
+    .setLngLat(coordinates)
+    .setHTML( name + ' - Station #' + code + '<br/>' + 'Province: '+ prov + "<br>" + "<br>" + "B. Violaceus: " + bVio + '<br>' + 'C. intestinalis: ' + cInt + '<br>' + 'S. clava: ' + sCla +"<br>" + 'B. schlosseri: ' + bSch + "<br>" + "C. mutica: " + cMut + "<br>" + "M. membranacea: " + mMem + "<br>" +  '<h2>Other Species Found:</h2>'+ oth)
+    .addTo(map);
+
+});
+
+map.on('mouseenter','stations',
+function(){
+  map.getCanvas().style.cursor= 'pointer';
+});
+
+map.on('mouseleave', 'stations',
+function(){
+    map.getCanvas().style.cursor = '';
+    });
+</script>
+ 
+</body>
+</html>
